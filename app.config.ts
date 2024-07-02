@@ -1,4 +1,5 @@
 import { defineConfig } from '@solidjs/start/config';
+import Icons from 'unplugin-icons/vite';
 
 export default defineConfig({
   ssr: true,
@@ -7,5 +8,8 @@ export default defineConfig({
     prerender: {
       crawlLinks: true,
     },
+  },
+  vite: {
+    plugins: [Icons({ compiler: 'solid' })],
   },
 });

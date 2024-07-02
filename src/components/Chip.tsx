@@ -1,14 +1,17 @@
-import { ParentComponent, Show } from 'solid-js';
-import { Icon } from '@iconify-icon/solid';
+import { ComponentProps, JSX, ParentComponent, Show } from 'solid-js';
+import { Dynamic } from 'solid-js/web';
 
-const Chip: ParentComponent<{ icon?: string; title?: string }> = (props) => {
+const Chip: ParentComponent<{
+  icon?: (props: ComponentProps<'svg'>) => JSX.Element;
+  title?: string;
+}> = (props) => {
   return (
     <span
-      class="p-1 m-1 border rounded-lg inline-flex items-center"
+      class="px-2 py-1 border rounded-lg inline-flex items-center"
       title={props.title}
     >
       <Show when={props.icon}>
-        <Icon icon={props.icon!} class="pr-1" />
+        <Dynamic component={props.icon} class="pr-1" />
       </Show>
       {props.children}
     </span>

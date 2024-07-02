@@ -18,6 +18,11 @@ import {
   AccordionTrigger,
 } from '~/components/ui/accordion';
 import serversJson from '../../.output/data/servers.json';
+import MaterialSymbolsLanguage from '~icons/material-symbols/language';
+import MaterialSymbolsPerson from '~icons/material-symbols/person';
+import MaterialSymbolsPersonCheck from '~icons/material-symbols/person-check';
+import MaterialSymbolsNews from '~icons/material-symbols/news';
+import MaterialSymbolsComment from '~icons/material-symbols/comment';
 
 const servers = serversJson as Server[];
 
@@ -70,16 +75,18 @@ export default function ServersPage() {
   };
 
   return (
-    <main class="text-center mx-auto text-gray-700 p-4 max-w-screen-xl">
+    <main class="mx-auto p-4 max-w-screen-xl">
       <h1 class="max-6-xs text-6xl text-sky-600 font-extralight uppercase my-16">
         Mbin Servers
       </h1>
-      Open Registration Only:{' '}
-      <input
-        type="checkbox"
-        checked={filterRegistration()}
-        onChange={(e) => setFilterRegistration(e.target.checked)}
-      />
+      <label>
+        Open Registration Only:{' '}
+        <input
+          type="checkbox"
+          checked={filterRegistration()}
+          onChange={(e) => setFilterRegistration(e.target.checked)}
+        />
+      </label>
       <br />
       Language:
       <select onChange={(e) => setLangFilter(e.target.value)}>
@@ -88,8 +95,18 @@ export default function ServersPage() {
           {(lang) => <option value={lang}>{languageNames.of(lang)}</option>}
         </For>
       </select>
+      <div class="my-4 flex flex-wrap gap-3 justify-center text-xl">
+        <Chip>{servers.length} servers</Chip>
+        <Chip>
+          {servers.reduce((v, server) => v + server.totalUsers, 0)} total users
+        </Chip>
+        <Chip>
+          {servers.reduce((v, server) => v + server.activeMonthUsers, 0)} active
+          users
+        </Chip>
+      </div>
       <div
-        class="grid"
+        class="grid gap-4"
         style={{
           'grid-template-columns': 'repeat(auto-fit, minmax(350px, 1fr))',
         }}
@@ -98,14 +115,14 @@ export default function ServersPage() {
           {(server) => {
             const StatChips = () => (
               <>
-                <Chip>Version {server.version}</Chip>
-                <Chip title="Language" icon="material-symbols:language">
+                <Chip title="Mbin Version">Mbin {server.version}</Chip>
+                <Chip title="Language" icon={MaterialSymbolsLanguage}>
                   {languageNames.of(server.language)}
                 </Chip>
-                <Chip title="Total users" icon="material-symbols:person">
+                <Chip title="Total users" icon={MaterialSymbolsPerson}>
                   {server.totalUsers}
                 </Chip>
-                <Chip title="Active users" icon="material-symbols:person-check">
+                <Chip title="Active users" icon={MaterialSymbolsPersonCheck}>
                   {server.activeMonthUsers}
                   <span class="opacity-75">/month</span>
                 </Chip>
@@ -113,9 +130,9 @@ export default function ServersPage() {
             );
 
             return (
-              <div class="border rounded-lg p-4 m-4 text-white block relative">
+              <div class="border rounded-lg p-4 block relative">
                 <a
-                  class="text-3xl text-sky-600 block text-center"
+                  class="block text-center pb-1"
                   href={`https://${server.domain}`}
                 >
                   <img
@@ -123,18 +140,21 @@ export default function ServersPage() {
                     class="inline-block size-16"
                   />
                   <br />
-                  {server.domain}
+                  <div class="text-3xl text-sky-600">{server.domain}</div>
+                  <Show
+                    when={server.name != '' && server.name != server.domain}
+                  >
+                    <div class="text-2xl text-sky-600 font-light">
+                      {server.name}
+                    </div>
+                  </Show>
                 </a>
 
-                <Show when={server.name != '' && server.name != server.domain}>
-                  <div class="text-2xl text-sky-600 font-light">
-                    {server.name}
-                  </div>
-                </Show>
+                <p class="text-center">{server.description}</p>
 
-                <p>{server.description}</p>
-
-                <StatChips />
+                <div class="my-1 flex flex-wrap gap-1">
+                  <StatChips />
+                </div>
 
                 <Dialog>
                   <DialogTrigger
@@ -152,21 +172,21 @@ export default function ServersPage() {
                       </DialogDescription>
                     </DialogHeader>
 
-                    <div>
+                    <div class="flex flex-wrap gap-1">
                       <StatChips />
                       <Chip
                         title="Active users"
-                        icon="material-symbols:person-check"
+                        icon={MaterialSymbolsPersonCheck}
                       >
                         {server.activeHalfyearUsers}
                         <span class="opacity-75">/halfyear</span>
                       </Chip>
-                      <Chip title="Local posts" icon="material-symbols:news">
+                      <Chip title="Local posts" icon={MaterialSymbolsNews}>
                         {server.localPosts}
                       </Chip>
                       <Chip
                         title="Local comments"
-                        icon="material-symbols:comment"
+                        icon={MaterialSymbolsComment}
                       >
                         {server.localComments}
                       </Chip>
@@ -205,9 +225,11 @@ export default function ServersPage() {
                             Defederated Servers ({server.defederated.length})
                           </AccordionTrigger>
                           <AccordionContent>
-                            <For each={server.defederated}>
-                              {(server) => <Chip>{server}</Chip>}
-                            </For>
+                            <div class="flex flex-wrap gap-1">
+                              <For each={server.defederated}>
+                                {(server) => <Chip>{server}</Chip>}
+                              </For>
+                            </div>
                           </AccordionContent>
                         </AccordionItem>
                       </Show>

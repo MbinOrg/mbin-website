@@ -4,6 +4,5 @@ export default defineConfig({
   ssr: false,
   server: {
     static: true,
-    baseURL: '/mbin-website/',
   },
 });

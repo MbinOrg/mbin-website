@@ -35,7 +35,7 @@ jobs:
         uses: pnpm/action-setup@v3
       - name: Install dependencies
         run: pnpm install
-      - name: Build with Next.js
+      - name: Build with Solid.js
         run: pnpm build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

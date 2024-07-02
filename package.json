@@ -3,8 +3,9 @@
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",
-    "build": "vinxi build",
-    "start": "vinxi start"
+    "build": "pnpm run initdata && vinxi build",
+    "start": "vinxi start",
+    "initdata": "node ./src/initdata.js"
   },
   "dependencies": {
     "@iconify-icon/solid": "^2.1.1",

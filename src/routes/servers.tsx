@@ -1,5 +1,4 @@
 import { For, Show, createSignal } from 'solid-js';
-import { createAsync, cache } from '@solidjs/router';
 import Markdown from '~/components/Markdown';
 import Chip from '~/components/Chip';
 import { Button } from '~/components/ui/button';
@@ -18,8 +17,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '~/components/ui/accordion';
+import serversJson from '../../.output/data/servers.json';
 
-type Server = {
+const servers = serversJson as Server[];
+
+export interface Server {
   domain: string;
   version: string;
   name: string;
@@ -41,7 +43,7 @@ type Server = {
     terms?: string;
   };
   defederated: string[];
-};
+}
 
 const pageNames: Required<Server['pages']> = {
   about: 'About',
@@ -51,92 +53,16 @@ const pageNames: Required<Server['pages']> = {
   terms: 'Terms of Service',
 };
 
-const getServers = cache(async () => {
-  'use server';
-
-  const fediverseObserver = await (
-    await fetch('https://api.fediverse.observer/', {
-      body: '{"query":"{nodes(softwarename:\\"mbin\\" status: \\"UP\\"){domain}}"}',
-      method: 'POST',
-    })
-  ).json();
-
-  const servers: string[] = fediverseObserver.data.nodes.map((v) => v.domain);
-
-  return (
-    await Promise.allSettled(
-      servers.map(async (serverHost) => {
-        console.log('START:', serverHost);
-
-        const jsonNodeInfo = await (
-          await fetch(`https://${serverHost}/nodeinfo/2.1.json`)
-        ).json();
-
-        if (jsonNodeInfo.software.name != 'mbin') {
-          throw new Error(
-            `${serverHost} software does not match mbin (skipped)`,
-          );
-        }
-
-        const jsonApiInfo = await (
-          await fetch(`https://${serverHost}/api/info`)
-        ).json();
-        if (jsonApiInfo.websiteDomain != serverHost) {
-          throw new Error(`${serverHost} api not setup correctly (skipped)`);
-        }
-        const jsonApiInstance = await (
-          await fetch(`https://${serverHost}/api/instance`)
-        ).json();
-        const jsonApiDefederated = await (
-          await fetch(`https://${serverHost}/api/defederated`)
-        ).json();
-
-        console.log('FINISH:', serverHost);
-
-        const server: Server = {
-          domain: serverHost,
-          version: jsonNodeInfo.software.version,
-          name: jsonNodeInfo.metadata.nodeName,
-          description: jsonNodeInfo.metadata.nodeDescription,
-          openRegistrations: jsonNodeInfo.openRegistrations,
-          federationEnabled: jsonApiInfo.websiteFederationEnabled,
-          language: jsonApiInfo.websiteDefaultLang ?? 'en',
-          contactEmail: jsonApiInfo.websiteContactEmail,
-          totalUsers: jsonNodeInfo.usage.users.total,
-          activeHalfyearUsers: jsonNodeInfo.usage.users.activeHalfyear,
-          activeMonthUsers: jsonNodeInfo.usage.users.activeMonth,
-          localPosts: jsonNodeInfo.usage.localPosts,
-          localComments: jsonNodeInfo.usage.localComments,
-          pages: jsonApiInstance,
-          defederated: jsonApiDefederated.instances ?? [],
-        };
-
-        return server;
-      }),
-    )
-  )
-    .filter((v) => v.status == 'fulfilled')
-    .map((v) => v.value as Server);
-}, 'users');
-
-export const route = {
-  load: () => getServers(),
-};
-
 const languageNames = new Intl.DisplayNames(['en'], {
   type: 'language',
 });
 
 export default function ServersPage() {
-  const servers = createAsync(() => getServers());
-
   const [filterRegistration, setFilterRegistration] = createSignal(true);
   const [langFilter, setLangFilter] = createSignal<string>('');
 
   const resultServers = () => {
-    if (!servers()) return undefined;
-
-    return servers()!.filter(
+    return servers.filter(
       (server) =>
         (!filterRegistration() || server.openRegistrations) &&
         (!langFilter() || server.language == langFilter()),
@@ -158,7 +84,7 @@ export default function ServersPage() {
       Language:
       <select onChange={(e) => setLangFilter(e.target.value)}>
         <option value="">All Languages</option>
-        <For each={[...new Set(servers()?.map((v) => v.language))]}>
+        <For each={[...new Set(servers.map((v) => v.language))]}>
           {(lang) => <option value={lang}>{languageNames.of(lang)}</option>}
         </For>
       </select>

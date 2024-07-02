@@ -1,5 +1,5 @@
 {
-  "name": "example-with-tailwindcss",
+  "name": "mbin-website",
   "type": "module",
   "scripts": {
     "dev": "vinxi dev",

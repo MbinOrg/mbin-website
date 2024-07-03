@@ -23,6 +23,15 @@ import MaterialSymbolsPerson from '~icons/material-symbols/person';
 import MaterialSymbolsPersonCheck from '~icons/material-symbols/person-check';
 import MaterialSymbolsNews from '~icons/material-symbols/news';
 import MaterialSymbolsComment from '~icons/material-symbols/comment';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select';
+import { Checkbox } from '~/components/ui/checkbox';
+import { Label } from '~/components/ui/label';
 
 const servers = serversJson as Server[];
 
@@ -65,13 +74,34 @@ const languageNames = new Intl.DisplayNames(['en'], {
 export default function ServersPage() {
   const [filterRegistration, setFilterRegistration] = createSignal(true);
   const [langFilter, setLangFilter] = createSignal<string>('');
+  const [sort, setSort] = createSignal<'random' | 'activeUsers' | 'totalUsers'>(
+    'activeUsers',
+  );
+  const sortNameMap = {
+    random: 'Random',
+    activeUsers: 'Active Users',
+    totalUsers: 'Total Users',
+  };
 
   const resultServers = () => {
-    return servers.filter(
-      (server) =>
-        (!filterRegistration() || server.openRegistrations) &&
-        (!langFilter() || server.language == langFilter()),
-    );
+    return servers
+      .filter(
+        (server) =>
+          (!filterRegistration() || server.openRegistrations) &&
+          (!langFilter() || server.language == langFilter()),
+      )
+      .sort((a, b) => {
+        switch (sort()) {
+          case 'random':
+            return 0.5 - Math.random();
+          case 'activeUsers':
+            return b.activeMonthUsers - a.activeMonthUsers;
+          case 'totalUsers':
+            return b.totalUsers - a.totalUsers;
+          default:
+            return 0;
+        }
+      });
   };
 
   return (
@@ -79,22 +109,54 @@ export default function ServersPage() {
       <h1 class="max-6-xs text-6xl text-sky-600 font-extralight uppercase my-16">
         Mbin Servers
       </h1>
-      <label>
-        Open Registration Only:{' '}
-        <input
-          type="checkbox"
+      <div class="flex">
+        <Checkbox
+          id="open-registration"
+          class="mr-2"
           checked={filterRegistration()}
-          onChange={(e) => setFilterRegistration(e.target.checked)}
+          onChange={(v) => setFilterRegistration(v)}
         />
-      </label>
+        <Label for="open-registration-input">Open Registration Only</Label>
+      </div>
       <br />
       Language:
-      <select onChange={(e) => setLangFilter(e.target.value)}>
-        <option value="">All Languages</option>
-        <For each={[...new Set(servers.map((v) => v.language))]}>
-          {(lang) => <option value={lang}>{languageNames.of(lang)}</option>}
-        </For>
-      </select>
+      <Select
+        value={langFilter()}
+        onChange={setLangFilter}
+        options={[...new Set(servers.map((v) => v.language))]}
+        placeholder="All Languages"
+        itemComponent={(props) => (
+          <SelectItem item={props.item}>
+            {languageNames.of(props.item.rawValue)}
+          </SelectItem>
+        )}
+      >
+        <SelectTrigger aria-label="Fruit" class="w-[180px]">
+          <SelectValue<string>>
+            {(state) => languageNames.of(state.selectedOption())}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent />
+      </Select>
+      <br />
+      Sort by:
+      <Select
+        value={sort()}
+        onChange={setSort}
+        options={Object.keys(sortNameMap)}
+        itemComponent={(props) => (
+          <SelectItem item={props.item}>
+            {sortNameMap[props.item.rawValue]}
+          </SelectItem>
+        )}
+      >
+        <SelectTrigger aria-label="Fruit" class="w-[180px]">
+          <SelectValue<string>>
+            {(state) => sortNameMap[state.selectedOption()]}
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent />
+      </Select>
       <div class="my-4 flex flex-wrap gap-3 justify-center text-xl">
         <Chip>{servers.length} servers</Chip>
         <Chip>

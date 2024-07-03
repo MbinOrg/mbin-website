@@ -18,6 +18,13 @@ export default function Nav() {
         <li class={`border-b-2 ${active('/servers')} mx-1.5 sm:mx-6`}>
           <a href="/servers">Servers</a>
         </li>
+        <span class="grow"></span>
+        <li class={`border-b-2 mx-1.5 sm:mx-6`}>
+          <a href="https://docs.joinmbin.org/">Docs</a>
+        </li>
+        <li class={`border-b-2 mx-1.5 sm:mx-6`}>
+          <a href="https://github.com/mbinOrg/mbin">GitHub</a>
+        </li>
       </ul>
     </nav>
   );

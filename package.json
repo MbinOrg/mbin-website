@@ -2,7 +2,7 @@
   "name": "mbin-website",
   "type": "module",
   "scripts": {
-    "dev": "vinxi dev",
+    "dev": "pnpm run initdata && vinxi dev",
     "build": "pnpm run initdata && vinxi build",
     "start": "vinxi start",
     "initdata": "node ./src/initdata.js"

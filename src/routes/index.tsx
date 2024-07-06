@@ -7,7 +7,7 @@ export default function Home() {
         Mbin
       </h1>
       <p class="my-10 text-2xl text-gray-400 block mx-auto">
-        a federated content aggregator, voting, discussion and microblogging
+        A federated content aggregator, voting, discussion and microblogging
         platform
         <br />
         (By the community, for the community)

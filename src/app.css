@@ -71,22 +71,22 @@ body {
 }
 
 .markdown h1 {
-  @apply mt-2 text-5xl;
+  @apply mt-6 mb-4 text-5xl;
 }
 .markdown h2 {
-  @apply mt-2 text-4xl;
+  @apply mt-6 mb-4 text-4xl;
 }
 .markdown h3 {
-  @apply mt-2 text-3xl;
+  @apply mt-6 mb-4 text-3xl;
 }
 .markdown h4 {
-  @apply mt-2 text-2xl;
+  @apply mt-6 mb-4 text-2xl;
 }
 .markdown h5 {
-  @apply mt-2 text-xl;
+  @apply mt-6 mb-4 text-xl;
 }
 .markdown h6 {
-  @apply mt-2 text-lg;
+  @apply mt-6 mb-4 text-lg;
 }
 
 .markdown a {
@@ -94,5 +94,12 @@ body {
 }
 
 .markdown p {
-  @apply my-2;
+  @apply mb-4;
+}
+
+.markdown ul {
+  @apply mb-4 ml-8 list-disc;
+}
+.markdown ol {
+  @apply mb-4 ml-8 list-decimal;
 }

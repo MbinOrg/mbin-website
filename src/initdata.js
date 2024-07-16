@@ -145,20 +145,6 @@ const fetchServerInfo = async (domain) => {
 
   // A server is considered outdated if a newer version has been available for more than 30 days.
   const releaseIndex = releases.findIndex((v) => v.version === version);
-  console.log(
-    releaseIndex,
-    version,
-    releases[releaseIndex].version,
-    releases[releaseIndex].publishedAt,
-  );
-  if (releaseIndex > 0) {
-    console.log(
-      Date.now() - Date.parse(releases[releaseIndex - 1].publishedAt),
-      releases[releaseIndex - 1].publishedAt,
-      Date.now() - Date.parse(releases[releaseIndex - 1].publishedAt) >
-        1000 * 60 * 60 * 24 * 30,
-    );
-  }
   const versionOutdated =
     releaseIndex > 0 &&
     Date.now() - Date.parse(releases[releaseIndex - 1].publishedAt) >

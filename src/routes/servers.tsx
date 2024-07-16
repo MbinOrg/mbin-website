@@ -118,6 +118,17 @@ export default function ServersPage() {
       <h1 class="max-6-xs text-6xl text-sky-600 font-extralight uppercase my-16">
         Mbin Servers
       </h1>
+      <div class="mb-12 font-light">
+        Also view servers on{' '}
+        <a href="https://fedidb.org/software/mbin" class="text-sky-600">
+          FediDB
+        </a>{' '}
+        and{' '}
+        <a href="https://mbin.fediverse.observer/list" class="text-sky-600">
+          Fediverse Observer
+        </a>
+        .
+      </div>
       <div class="flex">
         <Checkbox
           id="open-registration"
@@ -190,6 +201,7 @@ export default function ServersPage() {
                   classList={{
                     'bg-red-900 bg-opacity-40': server.versionOutdated,
                   }}
+                  href={`/releases?version=${server.version}`}
                 >
                   Mbin {server.version}
                   <Show when={server.versionOutdated}>

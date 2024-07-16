@@ -8,20 +8,26 @@ const Chip: ParentComponent<{
   classList?: {
     [k: string]: boolean | undefined;
   };
+  href?: string;
 }> = (props) => {
   return (
-    <span
+    <Dynamic
+      component={props.href ? 'a' : 'span'}
       class={
         'px-2 py-1 border rounded-lg inline-flex items-center ' + props.class
       }
-      classList={props.classList}
+      classList={{
+        'hover:text-blue-500': !!props.href,
+        ...props.classList,
+      }}
       title={props.title}
+      href={props.href}
     >
       <Show when={props.icon}>
         <Dynamic component={props.icon} class="pr-1" />
       </Show>
       {props.children}
-    </span>
+    </Dynamic>
   );
 };
 

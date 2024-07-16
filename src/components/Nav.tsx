@@ -21,6 +21,9 @@ export default function Nav() {
         <li class={navItemClass + active('/servers')}>
           <a href="/servers">Servers</a>
         </li>
+        <li class={navItemClass + active('/releases')}>
+          <a href="/releases">Releases</a>
+        </li>
 
         <span class="grow"></span>
 

@@ -3,6 +3,32 @@ import fs from 'node:fs/promises';
 await fs.rm('./.output/data', { recursive: true, force: true });
 await fs.mkdir('./.output/data', { recursive: true });
 
+/** @returns {Promise<Array<import('./routes/releases').Release>>} */
+const fetchReleases = async () => {
+  const releasesJson = await (
+    await fetch(
+      'https://api.github.com/repos/mbinOrg/mbin/releases?per_page=100',
+    )
+  ).json();
+
+  /** @type {Array<import('./routes/releases').Release>} */
+  const output = releasesJson.map((v, i, a) => ({
+    version: v.tag_name.substring(1),
+    // A server is considered outdated if a newer version has been available for more than 30 days.
+    outdated:
+      i > 0 &&
+      Date.now() - Date.parse(a[i - 1].published_at) > 1000 * 60 * 60 * 24 * 30,
+    publishedAt: v.published_at,
+    githubUrl: v.html_url,
+    body: v.body,
+  }));
+
+  return output.sort((a, b) => a.publishedAt - b.publishedAt);
+};
+
+const releases = await fetchReleases();
+fs.writeFile('./.output/data/releases.json', JSON.stringify(releases), 'utf8');
+
 /**
  * @returns {Promise<string>}
  */
@@ -73,62 +99,91 @@ const fetchServerList = async () => {
 const fetchServerInfo = async (domain) => {
   console.log('START:', domain);
 
-  const jsonNodeInfo = await (
-    await fetch(`https://${domain}/nodeinfo/2.1.json`)
-  ).json();
+  let jsonNodeInfo;
+  try {
+    jsonNodeInfo = await (
+      await fetch(`https://${domain}/nodeinfo/2.1.json`)
+    ).json();
 
-  if (jsonNodeInfo.software.name != 'mbin') {
-    throw new Error(`${domain} software does not match mbin (skipped)`);
+    if (jsonNodeInfo.software.name != 'mbin') {
+      throw new Error(`software check failed`);
+    }
+  } catch (error) {
+    throw new Error(`${domain}: invalid nodeinfo response (skip)`, {
+      cause: error,
+    });
   }
 
-  const jsonApiInfo = await (await fetch(`https://${domain}/api/info`)).json();
-  if (jsonApiInfo.websiteDomain != domain) {
-    throw new Error(`${domain} api not setup correctly (skipped)`);
+  /** @type {import('./routes/servers').Server['api']} */
+  let apiOutput;
+  try {
+    const jsonApiInfo = await (
+      await fetch(`https://${domain}/api/info`)
+    ).json();
+    if (jsonApiInfo.websiteDomain != domain) {
+      throw new Error(`domain check failed`);
+    }
+    const jsonApiInstance = await (
+      await fetch(`https://${domain}/api/instance`)
+    ).json();
+    const jsonApiDefederated = await (
+      await fetch(`https://${domain}/api/defederated`)
+    ).json();
+
+    apiOutput = {
+      defaultLang: jsonApiInfo.websiteDefaultLang ?? 'en',
+      federationEnabled: jsonApiInfo.websiteFederationEnabled,
+      contactEmail: jsonApiInfo.websiteContactEmail,
+      pages: jsonApiInstance,
+      defederated: jsonApiDefederated.instances ?? [],
+    };
+  } catch (error) {
+    console.error(
+      new Error(`${domain}: invalid api response (continue)`, {
+        cause: error,
+      }),
+    );
   }
-  const jsonApiInstance = await (
-    await fetch(`https://${domain}/api/instance`)
-  ).json();
-  const jsonApiDefederated = await (
-    await fetch(`https://${domain}/api/defederated`)
-  ).json();
 
-  console.log('FINISH:', domain);
-
-  return {
+  /** @type {import('./routes/servers').Server} */
+  const output = {
     domain: domain,
     version: jsonNodeInfo.software.version,
+    versionOutdated: releases.find(
+      (v) => v.version === jsonNodeInfo.software.version,
+    ).outdated,
     name: jsonNodeInfo.metadata.nodeName,
     description: jsonNodeInfo.metadata.nodeDescription,
     openRegistrations: jsonNodeInfo.openRegistrations,
-    federationEnabled: jsonApiInfo.websiteFederationEnabled,
-    language: jsonApiInfo.websiteDefaultLang ?? 'en',
-    contactEmail: jsonApiInfo.websiteContactEmail,
     totalUsers: jsonNodeInfo.usage.users.total,
     activeHalfyearUsers: jsonNodeInfo.usage.users.activeHalfyear,
     activeMonthUsers: jsonNodeInfo.usage.users.activeMonth,
     localPosts: jsonNodeInfo.usage.localPosts,
     localComments: jsonNodeInfo.usage.localComments,
-    pages: jsonApiInstance,
-    defederated: jsonApiDefederated.instances ?? [],
+    api: apiOutput,
   };
+
+  console.log('FINISH:', domain);
+
+  return output;
 };
 
 const initServerData = async () => {
-  const servers = await fetchServerList();
+  const serverDomains = await fetchServerList();
 
-  const serversJson = (await Promise.allSettled(servers.map(fetchServerInfo)))
+  const serversJson = (
+    await Promise.allSettled(serverDomains.map(fetchServerInfo))
+  )
     .filter((v) => {
       const isOk = v.status == 'fulfilled';
 
-      if (!isOk) {
-        console.error(v.reason);
-      }
+      if (!isOk) console.error(v.reason);
 
       return isOk;
     })
     .map((v) => v.value);
 
-  console.log('Successful Mbin servers found:', serversJson.length);
+  console.log('Mbin servers found:', serversJson.length);
 
   fs.writeFile(
     './.output/data/servers.json',

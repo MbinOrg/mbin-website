@@ -23,6 +23,7 @@ import MaterialSymbolsPerson from '~icons/material-symbols/person';
 import MaterialSymbolsPersonCheck from '~icons/material-symbols/person-check';
 import MaterialSymbolsNews from '~icons/material-symbols/news';
 import MaterialSymbolsComment from '~icons/material-symbols/comment';
+import MaterialSymbolsWarning from '~icons/material-symbols/warning';
 import {
   Select,
   SelectContent,
@@ -32,34 +33,42 @@ import {
 } from '~/components/ui/select';
 import { Checkbox } from '~/components/ui/checkbox';
 import { Label } from '~/components/ui/label';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '~/components/ui/tooltip';
 
 const servers = serversJson as Server[];
 
 export interface Server {
   domain: string;
   version: string;
+  versionOutdated: boolean;
   name: string;
   description: string;
   openRegistrations: boolean;
-  federationEnabled: boolean;
-  language: string;
-  contactEmail: string;
   totalUsers: number;
   activeHalfyearUsers: number;
   activeMonthUsers: number;
   localPosts: number;
   localComments: number;
-  pages: {
-    about?: string;
-    contact?: string;
-    faq?: string;
-    privacyPolicy?: string;
-    terms?: string;
+  api?: {
+    contactEmail: string;
+    federationEnabled: boolean;
+    defaultLang: string;
+    pages: {
+      about?: string;
+      contact?: string;
+      faq?: string;
+      privacyPolicy?: string;
+      terms?: string;
+    };
+    defederated: string[];
   };
-  defederated: string[];
 }
 
-const pageNames: Required<Server['pages']> = {
+const pageNames: Required<NonNullable<Server['api']>['pages']> = {
   about: 'About',
   contact: 'Contact',
   faq: 'Frequently Asked Questions',
@@ -88,7 +97,7 @@ export default function ServersPage() {
       .filter(
         (server) =>
           (!filterRegistration() || server.openRegistrations) &&
-          (!langFilter() || server.language == langFilter()),
+          (!langFilter() || server.api?.defaultLang == langFilter()),
       )
       .sort((a, b) => {
         switch (sort()) {
@@ -109,6 +118,17 @@ export default function ServersPage() {
       <h1 class="max-6-xs text-6xl text-sky-600 font-extralight uppercase my-16">
         Mbin Servers
       </h1>
+      <div class="mb-12 font-light">
+        Also view servers on{' '}
+        <a href="https://fedidb.org/software/mbin" class="text-sky-600">
+          FediDB
+        </a>{' '}
+        and{' '}
+        <a href="https://mbin.fediverse.observer/list" class="text-sky-600">
+          Fediverse Observer
+        </a>
+        .
+      </div>
       <div class="flex">
         <Checkbox
           id="open-registration"
@@ -123,7 +143,11 @@ export default function ServersPage() {
       <Select
         value={langFilter()}
         onChange={setLangFilter}
-        options={[...new Set(servers.map((v) => v.language))]}
+        options={[
+          ...new Set(
+            servers.filter((v) => v.api).map((v) => v.api?.defaultLang),
+          ),
+        ]}
         placeholder="All Languages"
         itemComponent={(props) => (
           <SelectItem item={props.item}>
@@ -131,7 +155,7 @@ export default function ServersPage() {
           </SelectItem>
         )}
       >
-        <SelectTrigger aria-label="Fruit" class="w-[180px]">
+        <SelectTrigger aria-label="Language" class="w-[180px]">
           <SelectValue<string>>
             {(state) => languageNames.of(state.selectedOption())}
           </SelectValue>
@@ -151,7 +175,7 @@ export default function ServersPage() {
         )}
       >
         <SelectTrigger aria-label="Fruit" class="w-[180px]">
-          <SelectValue<string>>
+          <SelectValue<keyof typeof sortNameMap>>
             {(state) => sortNameMap[state.selectedOption()]}
           </SelectValue>
         </SelectTrigger>
@@ -167,20 +191,50 @@ export default function ServersPage() {
           users
         </Chip>
       </div>
-      <div
-        class="grid gap-4"
-        style={{
-          'grid-template-columns': 'repeat(auto-fit, minmax(350px, 1fr))',
-        }}
-      >
+      <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <For each={resultServers()}>
           {(server) => {
             const StatChips = () => (
               <>
-                <Chip title="Mbin Version">Mbin {server.version}</Chip>
-                <Chip title="Language" icon={MaterialSymbolsLanguage}>
-                  {languageNames.of(server.language)}
+                <Chip
+                  classList={{
+                    'bg-red-900 bg-opacity-40': server.versionOutdated,
+                  }}
+                  href={`/releases?version=${server.version}`}
+                >
+                  Mbin {server.version}
+                  <Show when={server.versionOutdated}>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <MaterialSymbolsWarning class="ml-1 text-red-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        This server is using an outdated version. Please ask the
+                        server admin to upgrade or use a different server.
+                      </TooltipContent>
+                    </Tooltip>
+                  </Show>
                 </Chip>
+                <Show when={!server.api}>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Chip class="bg-red-900 bg-opacity-40">
+                        No API
+                        <MaterialSymbolsWarning class="ml-1 text-red-500" />
+                      </Chip>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      This server's api is inaccessible and will not work with
+                      apps. Please ask the server admin to fix the issue or use
+                      a different server.
+                    </TooltipContent>
+                  </Tooltip>
+                </Show>
+                <Show when={server.api}>
+                  <Chip title="Language" icon={MaterialSymbolsLanguage}>
+                    {languageNames.of(server.api!.defaultLang)}
+                  </Chip>
+                </Show>
                 <Chip title="Total users" icon={MaterialSymbolsPerson}>
                   {server.totalUsers}
                 </Chip>
@@ -199,7 +253,7 @@ export default function ServersPage() {
                 >
                   <img
                     src={`https://${server.domain}/favicon.ico`}
-                    class="inline-block size-16"
+                    class="inline-block size-16 rounded"
                   />
                   <br />
                   <div class="text-3xl text-sky-600">{server.domain}</div>
@@ -254,48 +308,66 @@ export default function ServersPage() {
                       </Chip>
                     </div>
 
-                    <Accordion
-                      multiple={false}
-                      collapsible
-                      defaultValue={['about']}
+                    <Show
+                      when={server.api}
+                      fallback={
+                        <div>
+                          No information available due to inaccessible api.
+                        </div>
+                      }
                     >
-                      <For each={Object.entries(server.pages)}>
-                        {([page, pageContent]) => (
-                          <Show when={pageContent || page === 'contact'}>
-                            <AccordionItem value={page}>
-                              <AccordionTrigger>
-                                {pageNames[page as keyof Server['pages']]}
-                              </AccordionTrigger>
-                              <AccordionContent>
-                                <Show when={page == 'contact'}>
-                                  <Button
-                                    href={`mailto:${server.contactEmail}`}
-                                    as="a"
-                                  >
-                                    Email admin: {server.contactEmail}
-                                  </Button>
-                                </Show>
-                                <Markdown>{pageContent}</Markdown>
-                              </AccordionContent>
-                            </AccordionItem>
-                          </Show>
-                        )}
-                      </For>
-                      <Show when={server.defederated.length}>
-                        <AccordionItem value="defederated">
-                          <AccordionTrigger>
-                            Defederated Servers ({server.defederated.length})
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <div class="flex flex-wrap gap-1">
-                              <For each={server.defederated}>
-                                {(server) => <Chip>{server}</Chip>}
-                              </For>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Show>
-                    </Accordion>
+                      <Accordion
+                        multiple={false}
+                        collapsible
+                        defaultValue={['about']}
+                      >
+                        <For each={Object.entries(server.api!.pages)}>
+                          {([page, pageContent]) => (
+                            <Show when={pageContent || page === 'contact'}>
+                              <AccordionItem value={page}>
+                                <AccordionTrigger>
+                                  {
+                                    pageNames[
+                                      page as keyof NonNullable<
+                                        Server['api']
+                                      >['pages']
+                                    ]
+                                  }
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                  <Show when={page == 'contact'}>
+                                    <Button
+                                      href={`mailto:${
+                                        server.api!.contactEmail
+                                      }`}
+                                      as="a"
+                                    >
+                                      Email admin: {server.api!.contactEmail}
+                                    </Button>
+                                  </Show>
+                                  <Markdown>{pageContent}</Markdown>
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Show>
+                          )}
+                        </For>
+                        <Show when={server.api!.defederated.length}>
+                          <AccordionItem value="defederated">
+                            <AccordionTrigger>
+                              Defederated Servers (
+                              {server.api!.defederated.length})
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div class="flex flex-wrap gap-1">
+                                <For each={server.api!.defederated}>
+                                  {(server) => <Chip>{server}</Chip>}
+                                </For>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Show>
+                      </Accordion>
+                    </Show>
 
                     <Show when={server.openRegistrations}>
                       <DialogFooter>

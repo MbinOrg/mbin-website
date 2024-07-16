@@ -100,6 +100,17 @@ export default function ServersPage() {
           }}
         </For>
       </div>
+
+      <div class="my-8 text-center font-light">
+        Don't see your app here? Contribute to the list by making a pull request{' '}
+        <a
+          href="https://github.com/MbinOrg/mbin-website/blob/main/src/data/apps.ts"
+          class="text-sky-600"
+        >
+          here
+        </a>
+        .
+      </div>
     </main>
   );
 }

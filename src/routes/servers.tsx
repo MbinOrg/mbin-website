@@ -143,7 +143,11 @@ export default function ServersPage() {
       <Select
         value={langFilter()}
         onChange={setLangFilter}
-        options={[...new Set(servers.map((v) => v.api?.defaultLang))]}
+        options={[
+          ...new Set(
+            servers.filter((v) => v.api).map((v) => v.api?.defaultLang),
+          ),
+        ]}
         placeholder="All Languages"
         itemComponent={(props) => (
           <SelectItem item={props.item}>

@@ -41,25 +41,27 @@ export interface Server {
   name: string;
   description: string;
   openRegistrations: boolean;
-  federationEnabled: boolean;
-  language: string;
-  contactEmail: string;
   totalUsers: number;
   activeHalfyearUsers: number;
   activeMonthUsers: number;
   localPosts: number;
   localComments: number;
-  pages: {
-    about?: string;
-    contact?: string;
-    faq?: string;
-    privacyPolicy?: string;
-    terms?: string;
+  api?: {
+    contactEmail: string;
+    federationEnabled: boolean;
+    defaultLang: string;
+    pages: {
+      about?: string;
+      contact?: string;
+      faq?: string;
+      privacyPolicy?: string;
+      terms?: string;
+    };
+    defederated: string[];
   };
-  defederated: string[];
 }
 
-const pageNames: Required<Server['pages']> = {
+const pageNames: Required<NonNullable<Server['api']>['pages']> = {
   about: 'About',
   contact: 'Contact',
   faq: 'Frequently Asked Questions',
@@ -88,7 +90,7 @@ export default function ServersPage() {
       .filter(
         (server) =>
           (!filterRegistration() || server.openRegistrations) &&
-          (!langFilter() || server.language == langFilter()),
+          (!langFilter() || server.api?.defaultLang == langFilter()),
       )
       .sort((a, b) => {
         switch (sort()) {
@@ -123,7 +125,7 @@ export default function ServersPage() {
       <Select
         value={langFilter()}
         onChange={setLangFilter}
-        options={[...new Set(servers.map((v) => v.language))]}
+        options={[...new Set(servers.map((v) => v.api?.defaultLang))]}
         placeholder="All Languages"
         itemComponent={(props) => (
           <SelectItem item={props.item}>
@@ -131,7 +133,7 @@ export default function ServersPage() {
           </SelectItem>
         )}
       >
-        <SelectTrigger aria-label="Fruit" class="w-[180px]">
+        <SelectTrigger aria-label="Language" class="w-[180px]">
           <SelectValue<string>>
             {(state) => languageNames.of(state.selectedOption())}
           </SelectValue>
@@ -151,7 +153,7 @@ export default function ServersPage() {
         )}
       >
         <SelectTrigger aria-label="Fruit" class="w-[180px]">
-          <SelectValue<string>>
+          <SelectValue<keyof typeof sortNameMap>>
             {(state) => sortNameMap[state.selectedOption()]}
           </SelectValue>
         </SelectTrigger>
@@ -178,9 +180,11 @@ export default function ServersPage() {
             const StatChips = () => (
               <>
                 <Chip title="Mbin Version">Mbin {server.version}</Chip>
-                <Chip title="Language" icon={MaterialSymbolsLanguage}>
-                  {languageNames.of(server.language)}
-                </Chip>
+                <Show when={server.api}>
+                  <Chip title="Language" icon={MaterialSymbolsLanguage}>
+                    {languageNames.of(server.api!.defaultLang)}
+                  </Chip>
+                </Show>
                 <Chip title="Total users" icon={MaterialSymbolsPerson}>
                   {server.totalUsers}
                 </Chip>
@@ -254,48 +258,67 @@ export default function ServersPage() {
                       </Chip>
                     </div>
 
-                    <Accordion
-                      multiple={false}
-                      collapsible
-                      defaultValue={['about']}
+                    <Show
+                      when={server.api}
+                      fallback={
+                        <div>
+                          No information available. This server's api is
+                          inaccessible and it's not recommended to use.
+                        </div>
+                      }
                     >
-                      <For each={Object.entries(server.pages)}>
-                        {([page, pageContent]) => (
-                          <Show when={pageContent || page === 'contact'}>
-                            <AccordionItem value={page}>
-                              <AccordionTrigger>
-                                {pageNames[page as keyof Server['pages']]}
-                              </AccordionTrigger>
-                              <AccordionContent>
-                                <Show when={page == 'contact'}>
-                                  <Button
-                                    href={`mailto:${server.contactEmail}`}
-                                    as="a"
-                                  >
-                                    Email admin: {server.contactEmail}
-                                  </Button>
-                                </Show>
-                                <Markdown>{pageContent}</Markdown>
-                              </AccordionContent>
-                            </AccordionItem>
-                          </Show>
-                        )}
-                      </For>
-                      <Show when={server.defederated.length}>
-                        <AccordionItem value="defederated">
-                          <AccordionTrigger>
-                            Defederated Servers ({server.defederated.length})
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <div class="flex flex-wrap gap-1">
-                              <For each={server.defederated}>
-                                {(server) => <Chip>{server}</Chip>}
-                              </For>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      </Show>
-                    </Accordion>
+                      <Accordion
+                        multiple={false}
+                        collapsible
+                        defaultValue={['about']}
+                      >
+                        <For each={Object.entries(server.api!.pages)}>
+                          {([page, pageContent]) => (
+                            <Show when={pageContent || page === 'contact'}>
+                              <AccordionItem value={page}>
+                                <AccordionTrigger>
+                                  {
+                                    pageNames[
+                                      page as keyof NonNullable<
+                                        Server['api']
+                                      >['pages']
+                                    ]
+                                  }
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                  <Show when={page == 'contact'}>
+                                    <Button
+                                      href={`mailto:${
+                                        server.api!.contactEmail
+                                      }`}
+                                      as="a"
+                                    >
+                                      Email admin: {server.api!.contactEmail}
+                                    </Button>
+                                  </Show>
+                                  <Markdown>{pageContent}</Markdown>
+                                </AccordionContent>
+                              </AccordionItem>
+                            </Show>
+                          )}
+                        </For>
+                        <Show when={server.api!.defederated.length}>
+                          <AccordionItem value="defederated">
+                            <AccordionTrigger>
+                              Defederated Servers (
+                              {server.api!.defederated.length})
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div class="flex flex-wrap gap-1">
+                                <For each={server.api!.defederated}>
+                                  {(server) => <Chip>{server}</Chip>}
+                                </For>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Show>
+                      </Accordion>
+                    </Show>
 
                     <Show when={server.openRegistrations}>
                       <DialogFooter>

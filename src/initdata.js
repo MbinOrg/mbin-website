@@ -12,8 +12,12 @@ const fetchReleases = async () => {
   ).json();
 
   /** @type {Array<import('./routes/releases').Release>} */
-  const output = releasesJson.map((v) => ({
+  const output = releasesJson.map((v, i, a) => ({
     version: v.tag_name.substring(1),
+    // A server is considered outdated if a newer version has been available for more than 30 days.
+    outdated:
+      i > 0 &&
+      Date.now() - Date.parse(a[i - 1].published_at) > 1000 * 60 * 60 * 24 * 30,
     publishedAt: v.published_at,
     githubUrl: v.html_url,
     body: v.body,
@@ -141,20 +145,13 @@ const fetchServerInfo = async (domain) => {
     );
   }
 
-  const version = jsonNodeInfo.software.version;
-
-  // A server is considered outdated if a newer version has been available for more than 30 days.
-  const releaseIndex = releases.findIndex((v) => v.version === version);
-  const versionOutdated =
-    releaseIndex > 0 &&
-    Date.now() - Date.parse(releases[releaseIndex - 1].publishedAt) >
-      1000 * 60 * 60 * 24 * 30;
-
   /** @type {import('./routes/servers').Server} */
   const output = {
     domain: domain,
-    version: version,
-    versionOutdated: versionOutdated,
+    version: jsonNodeInfo.software.version,
+    versionOutdated: releases.find(
+      (v) => v.version === jsonNodeInfo.software.version,
+    ).outdated,
     name: jsonNodeInfo.metadata.nodeName,
     description: jsonNodeInfo.metadata.nodeDescription,
     openRegistrations: jsonNodeInfo.openRegistrations,

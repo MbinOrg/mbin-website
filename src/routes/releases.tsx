@@ -14,6 +14,7 @@ const releases = releasesJson as Release[];
 
 export interface Release {
   version: string;
+  outdated: boolean;
   publishedAt: string;
   githubUrl: string;
   body: string;

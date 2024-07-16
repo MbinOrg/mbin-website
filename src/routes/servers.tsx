@@ -23,6 +23,7 @@ import MaterialSymbolsPerson from '~icons/material-symbols/person';
 import MaterialSymbolsPersonCheck from '~icons/material-symbols/person-check';
 import MaterialSymbolsNews from '~icons/material-symbols/news';
 import MaterialSymbolsComment from '~icons/material-symbols/comment';
+import MaterialSymbolsWarning from '~icons/material-symbols/warning';
 import {
   Select,
   SelectContent,
@@ -32,12 +33,18 @@ import {
 } from '~/components/ui/select';
 import { Checkbox } from '~/components/ui/checkbox';
 import { Label } from '~/components/ui/label';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '~/components/ui/tooltip';
 
 const servers = serversJson as Server[];
 
 export interface Server {
   domain: string;
   version: string;
+  versionOutdated: boolean;
   name: string;
   description: string;
   openRegistrations: boolean;
@@ -179,7 +186,39 @@ export default function ServersPage() {
           {(server) => {
             const StatChips = () => (
               <>
-                <Chip title="Mbin Version">Mbin {server.version}</Chip>
+                <Chip
+                  classList={{
+                    'bg-red-900 bg-opacity-40': server.versionOutdated,
+                  }}
+                >
+                  Mbin {server.version}
+                  <Show when={server.versionOutdated}>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <MaterialSymbolsWarning class="ml-1 text-red-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        This server is using an outdated version. Please ask the
+                        server admin to upgrade or use a different server.
+                      </TooltipContent>
+                    </Tooltip>
+                  </Show>
+                </Chip>
+                <Show when={!server.api}>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Chip class="bg-red-900 bg-opacity-40">
+                        No API
+                        <MaterialSymbolsWarning class="ml-1 text-red-500" />
+                      </Chip>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      This server's api is inaccessible and will not work with
+                      apps. Please ask the server admin to fix the issue or use
+                      a different server.
+                    </TooltipContent>
+                  </Tooltip>
+                </Show>
                 <Show when={server.api}>
                   <Chip title="Language" icon={MaterialSymbolsLanguage}>
                     {languageNames.of(server.api!.defaultLang)}
@@ -262,8 +301,7 @@ export default function ServersPage() {
                       when={server.api}
                       fallback={
                         <div>
-                          No information available. This server's api is
-                          inaccessible and it's not recommended to use.
+                          No information available due to inaccessible api.
                         </div>
                       }
                     >

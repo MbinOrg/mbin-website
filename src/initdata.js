@@ -3,6 +3,28 @@ import fs from 'node:fs/promises';
 await fs.rm('./.output/data', { recursive: true, force: true });
 await fs.mkdir('./.output/data', { recursive: true });
 
+/** @returns {Promise<Array<import('./routes/releases').Release>>} */
+const fetchReleases = async () => {
+  const releasesJson = await (
+    await fetch(
+      'https://api.github.com/repos/mbinOrg/mbin/releases?per_page=100',
+    )
+  ).json();
+
+  /** @type {Array<import('./routes/releases').Release>} */
+  const output = releasesJson.map((v) => ({
+    version: v.tag_name.substring(1),
+    publishedAt: v.published_at,
+    githubUrl: v.html_url,
+    body: v.body,
+  }));
+
+  return output.sort((a, b) => a.publishedAt - b.publishedAt);
+};
+
+const releases = await fetchReleases();
+fs.writeFile('./.output/data/releases.json', JSON.stringify(releases), 'utf8');
+
 /**
  * @returns {Promise<string>}
  */
@@ -119,10 +141,34 @@ const fetchServerInfo = async (domain) => {
     );
   }
 
+  const version = jsonNodeInfo.software.version;
+
+  // A server is considered outdated if a newer version has been available for more than 30 days.
+  const releaseIndex = releases.findIndex((v) => v.version === version);
+  console.log(
+    releaseIndex,
+    version,
+    releases[releaseIndex].version,
+    releases[releaseIndex].publishedAt,
+  );
+  if (releaseIndex > 0) {
+    console.log(
+      Date.now() - Date.parse(releases[releaseIndex - 1].publishedAt),
+      releases[releaseIndex - 1].publishedAt,
+      Date.now() - Date.parse(releases[releaseIndex - 1].publishedAt) >
+        1000 * 60 * 60 * 24 * 30,
+    );
+  }
+  const versionOutdated =
+    releaseIndex > 0 &&
+    Date.now() - Date.parse(releases[releaseIndex - 1].publishedAt) >
+      1000 * 60 * 60 * 24 * 30;
+
   /** @type {import('./routes/servers').Server} */
   const output = {
     domain: domain,
-    version: jsonNodeInfo.software.version,
+    version: version,
+    versionOutdated: versionOutdated,
     name: jsonNodeInfo.metadata.nodeName,
     description: jsonNodeInfo.metadata.nodeDescription,
     openRegistrations: jsonNodeInfo.openRegistrations,

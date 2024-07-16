@@ -187,12 +187,7 @@ export default function ServersPage() {
           users
         </Chip>
       </div>
-      <div
-        class="grid gap-4"
-        style={{
-          'grid-template-columns': 'repeat(auto-fit, minmax(350px, 1fr))',
-        }}
-      >
+      <div class="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         <For each={resultServers()}>
           {(server) => {
             const StatChips = () => (
@@ -254,7 +249,7 @@ export default function ServersPage() {
                 >
                   <img
                     src={`https://${server.domain}/favicon.ico`}
-                    class="inline-block size-16"
+                    class="inline-block size-16 rounded"
                   />
                   <br />
                   <div class="text-3xl text-sky-600">{server.domain}</div>

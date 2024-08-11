@@ -21,6 +21,7 @@ export const apps: App[] = [
     icon: 'https://raw.githubusercontent.com/jwr1/interstellar/6d8fce0972febccec91fa056746fdb9f4f960217/assets/icons/logo.png',
     description: 'An app for Mbin and Lemmy, connecting you to the fediverse.',
     links: {
+      fdroid: 'https://apt.izzysoft.de/fdroid/index/apk/one.jwr.interstellar',
       flathub: 'https://flathub.org/apps/one.jwr.interstellar',
       github: 'https://github.com/jwr1/interstellar',
       googlePlay:

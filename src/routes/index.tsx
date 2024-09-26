@@ -4,8 +4,8 @@ export default function Home() {
   return (
     <main class="mx-auto p-4 max-w-screen-lg">
       <div class="my-20 text-center">
-        <h1 class="text-5xl text-sky-600 font-light uppercase">Mbin</h1>
-        <p class="my-8 text-2xl text-gray-400 block mx-auto">
+        <h1 class="text-5xl text-sky-600 font-bold uppercase">Mbin</h1>
+        <p class="my-8 text-2xl text-white-400 block mx-auto">
           A federated content aggregator, voting, discussion and microblogging
           platform
           <br />

@@ -25,11 +25,11 @@ export default function ReleasesPage() {
 
   return (
     <main class="mx-auto p-4 max-w-screen-xl">
-      <h1 class="max-6-xs text-6xl text-sky-600 font-extralight uppercase my-16">
+      <h1 class="max-6-xs text-5xl text-sky-600 uppercase my-16">
         Mbin Releases
       </h1>
 
-      <div class="mb-12 font-light">
+      <div class="mb-12">
         Also view releases on{' '}
         <a href="https://github.com/MbinOrg/mbin/releases" class="text-sky-600">
           GitHub
@@ -47,7 +47,7 @@ export default function ReleasesPage() {
               <AccordionTrigger class="text-lg">
                 <span class="inline-flex items-center gap-3">
                   {release.version}
-                  <span class="text-base font-light">
+                  <span class="text-base font-bold">
                     {new Date(release.publishedAt).toLocaleDateString()}
                   </span>
                   <a href={release.githubUrl} class="hover:text-blue-500">

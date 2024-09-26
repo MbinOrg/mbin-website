@@ -115,10 +115,10 @@ export default function ServersPage() {
 
   return (
     <main class="mx-auto p-4 max-w-screen-xl">
-      <h1 class="max-6-xs text-6xl text-sky-600 font-extralight uppercase my-16">
+      <h1 class="max-6-xs text-5xl text-sky-600 uppercase my-16">
         Mbin Servers
       </h1>
-      <div class="mb-12 font-light">
+      <div class="mb-12">
         Also view servers on{' '}
         <a href="https://fedidb.org/software/mbin" class="text-sky-600">
           FediDB

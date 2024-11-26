@@ -17,6 +17,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "postcss": "^8.4.47",
+    "remark-gfm": "^4.0.0",
     "solid-js": "^1.9.1",
     "solid-markdown": "^2.0.13",
     "tailwind-merge": "^2.5.2",

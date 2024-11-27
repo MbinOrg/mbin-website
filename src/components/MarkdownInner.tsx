@@ -5,7 +5,7 @@ import { SolidMarkdown } from 'solid-markdown';
 const MarkdownInner: ParentComponent = (props) => {
   return (
     <SolidMarkdown class="text-left markdown" remarkPlugins={[remarkGfm]}>
-      {props.children}
+      {props.children as string}
     </SolidMarkdown>
   );
 };

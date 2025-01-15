@@ -40,6 +40,7 @@ const fetchServerList = async () => {
   /** @type Set<string> */
   const servers = new Set();
 
+  console.info('Fetch Mbin servers from fediverse.observer API');
   // Fetch Mbin servers from fediverse.observer
   const fediverseObserver = await (
     await fetch('https://api.fediverse.observer/', {
@@ -51,7 +52,8 @@ const fetchServerList = async () => {
   for (const server of fediverseObserver.data.nodes) {
     servers.add(server.domain);
   }
-
+  
+  console.info('Retrieve fedidb.org headers (cookie)');
   // Fetch Mbin servers from fedidb.org. The api used below is not documented and is subject to change;
   // this is used due to the current publicized api not being sufficient for fetching Mbin server lists.
   // Once issue #3 (https://github.com/fedidb/issues/issues/3) is complete, then we can move to api v1.
@@ -70,6 +72,7 @@ const fetchServerList = async () => {
     Cookie: fedidbCookies.join('; '),
   };
 
+  console.info('Fetch Mbin servers from fedidb.org API');
   let fedidbNextCursor = '';
 
   do {

@@ -1,5 +1,7 @@
 import fs from 'node:fs/promises';
 
+console.info('Creating the output directory');
+
 await fs.rm('./.output/data', { recursive: true, force: true });
 await fs.mkdir('./.output/data', { recursive: true });
 
@@ -25,6 +27,8 @@ const fetchReleases = async () => {
 
   return output.sort((a, b) => a.publishedAt - b.publishedAt);
 };
+
+console.info('Fetching the latest Mbin releases');
 
 const releases = await fetchReleases();
 fs.writeFile('./.output/data/releases.json', JSON.stringify(releases), 'utf8');
@@ -97,7 +101,7 @@ const fetchServerList = async () => {
  * @returns {Promise<import('./routes/servers').Server>}
  */
 const fetchServerInfo = async (domain) => {
-  console.log('START:', domain);
+  console.info('START:', domain);
 
   let jsonNodeInfo;
   try {
@@ -163,7 +167,7 @@ const fetchServerInfo = async (domain) => {
     api: apiOutput,
   };
 
-  console.log('FINISH:', domain);
+  console.info('FINISH:', domain);
 
   return output;
 };
@@ -183,7 +187,7 @@ const initServerData = async () => {
     })
     .map((v) => v.value);
 
-  console.log('Mbin servers found:', serversJson.length);
+  console.info('Mbin servers found:', serversJson.length);
 
   fs.writeFile(
     './.output/data/servers.json',
@@ -192,4 +196,6 @@ const initServerData = async () => {
   );
 };
 
+console.info('Start init server data');
 await initServerData();
+console.info('Done')

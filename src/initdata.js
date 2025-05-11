@@ -59,8 +59,8 @@ const fetchServerList = async () => {
   do {
     const fedidbServers = await (
       await fetch(
-        `https://api.fedidb.org/v1.1/servers?software=mbin${
-          fedidbNextCursor ? `&cursor=` + fedidbNextCursor : ''
+        `https://api.fedidb.org/v1.1/software/mbin/servers${
+          fedidbNextCursor ? `?cursor=` + fedidbNextCursor : ''
         }`,
       )
     ).json();

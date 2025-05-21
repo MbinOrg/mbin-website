@@ -34,7 +34,7 @@ const releases = await fetchReleases();
 fs.writeFile('./.output/data/releases.json', JSON.stringify(releases), 'utf8');
 
 /**
- * @returns {Promise<string>}
+ * @returns {Promise<string[]>}
  */
 const fetchServerList = async () => {
   /** @type Set<string> */
@@ -52,25 +52,6 @@ const fetchServerList = async () => {
   for (const server of fediverseObserver.data.nodes) {
     servers.add(server.domain);
   }
-  
-  console.info('Retrieve fedidb.org headers (cookie)');
-  // Fetch Mbin servers from fedidb.org. The api used below is not documented and is subject to change;
-  // this is used due to the current publicized api not being sufficient for fetching Mbin server lists.
-  // Once issue #3 (https://github.com/fedidb/issues/issues/3) is complete, then we can move to api v1.
-  const fedidbCookies = (await fetch('https://fedidb.org')).headers
-    .getSetCookie()
-    .map((c) => c.split(';')[0]);
-
-  const fedidbHeaders = {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-    'X-XSRF-TOKEN': decodeURIComponent(
-      fedidbCookies
-        .find((c) => c.startsWith('XSRF-TOKEN='))
-        .substring('XSRF-TOKEN='.length),
-    ),
-    Cookie: fedidbCookies.join('; '),
-  };
 
   console.info('Fetch Mbin servers from fedidb.org API');
   let fedidbNextCursor = '';
@@ -78,14 +59,9 @@ const fetchServerList = async () => {
   do {
     const fedidbServers = await (
       await fetch(
-        `https://fedidb.org/api/web/network/software/servers${
+        `https://api.fedidb.org/v1.1/software/mbin/servers${
           fedidbNextCursor ? `?cursor=` + fedidbNextCursor : ''
         }`,
-        {
-          headers: fedidbHeaders,
-          body: '{"slug":"mbin"}',
-          method: 'POST',
-        },
       )
     ).json();
 
@@ -201,4 +177,4 @@ const initServerData = async () => {
 
 console.info('Start init server data');
 await initServerData();
-console.info('Done')
+console.info('Done');

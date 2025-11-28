@@ -5,7 +5,7 @@ on:
   push:
     branches: ['main']
 
-  # Runs every hour
+  # Runs every 6 hours
   schedule:
     - cron: "26 */6 * * *"
 

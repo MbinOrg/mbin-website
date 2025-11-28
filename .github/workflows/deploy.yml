@@ -5,9 +5,9 @@ on:
   push:
     branches: ['main']
 
-  # Runs every hour
+  # Runs every 6 hours
   schedule:
-    - cron: "0 * * * *"
+    - cron: "26 */6 * * *"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

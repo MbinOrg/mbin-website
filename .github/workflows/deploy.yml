@@ -7,7 +7,7 @@ on:
 
   # Runs every hour
   schedule:
-    - cron: "0 * * * *"
+    - cron: "26 */6 * * *"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:

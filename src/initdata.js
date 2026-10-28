@@ -40,19 +40,6 @@ const fetchServerList = async () => {
   /** @type Set<string> */
   const servers = new Set();
 
-  console.info('Fetch Mbin servers from fediverse.observer API');
-  // Fetch Mbin servers from fediverse.observer
-  const fediverseObserver = await (
-    await fetch('https://api.fediverse.observer/', {
-      body: '{"query":"{nodes(softwarename:\\"mbin\\" status: \\"UP\\"){domain}}"}',
-      method: 'POST',
-    })
-  ).json();
-
-  for (const server of fediverseObserver.data.nodes) {
-    servers.add(server.domain);
-  }
-
   console.info('Fetch Mbin servers from fedidb.org API');
   let fedidbNextCursor = '';
 
